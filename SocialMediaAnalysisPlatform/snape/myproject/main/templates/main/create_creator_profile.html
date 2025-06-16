@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        }
+
+        .container {
+            display: flex;
+            width: 80%;
+            max-width: 1200px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .form-section {
+            flex: 1;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .form-section h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+
+        .form-section form label {
+            display: block;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #495057;
+        }
+
+        .form-section form input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .form-section form button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-section form button:hover {
+            background-color: #0056b3;
+        }
+
+        .preview-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to right, #343a40, #495057);
+            color: white;
+            text-align: center;
+        }
+
+        .preview-section h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .preview-item {
+            font-size: 18px;
+            margin: 5px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .zoom {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Form Section -->
+        <div class="form-section">
+            <h1>Create Your Profile</h1>
+            <form method="post" action="{% url 'create_creator_profile' %}">
+                {% csrf_token %}
+                <label for="id_first_name">First Name:</label>
+                <input type="text" id="id_first_name" name="first_name" placeholder="Enter your first name">
+
+                <label for="id_last_name">Last Name:</label>
+                <input type="text" id="id_last_name" name="last_name" placeholder="Enter your last name">
+
+                <label for="id_company">Company:</label>
+                <input type="text" id="id_company" name="company" placeholder="Enter your company name">
+
+                <label for="id_timezone">Timezone:</label>
+                <input type="text" id="id_timezone" name="timezone" placeholder="Enter your timezone">
+
+                <button type="submit">Create Profile</button>
+            </form>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section">
+            <h2>Profile Preview</h2>
+            <div id="preview-first-name" class="preview-item">First Name: </div>
+            <div id="preview-last-name" class="preview-item">Last Name: </div>
+            <div id="preview-company" class="preview-item">Company: </div>
+            <div id="preview-timezone" class="preview-item">Timezone: </div>
+        </div>
+    </div>
+
+    <script>
+        // Get form fields
+        const firstNameField = document.getElementById('id_first_name');
+        const lastNameField = document.getElementById('id_last_name');
+        const companyField = document.getElementById('id_company');
+        const timezoneField = document.getElementById('id_timezone');
+
+        // Get preview elements
+        const firstNamePreview = document.getElementById('preview-first-name');
+        const lastNamePreview = document.getElementById('preview-last-name');
+        const companyPreview = document.getElementById('preview-company');
+        const timezonePreview = document.getElementById('preview-timezone');
+
+        // Add event listeners to form fields
+        firstNameField.addEventListener('input', () => updatePreview(firstNameField, firstNamePreview, 'First Name'));
+        lastNameField.addEventListener('input', () => updatePreview(lastNameField, lastNamePreview, 'Last Name'));
+        companyField.addEventListener('input', () => updatePreview(companyField, companyPreview, 'Company'));
+        timezoneField.addEventListener('input', () => updatePreview(timezoneField, timezonePreview, 'Timezone'));
+
+        // Update preview function with zoom effect
+        function updatePreview(field, preview, label) {
+            preview.textContent = `${label}: ${field.value}`;
+            preview.classList.add('zoom');
+            setTimeout(() => {
+                preview.classList.remove('zoom');
+            }, 500);
+        }
+    </script>
+    
+</body>
+</html>

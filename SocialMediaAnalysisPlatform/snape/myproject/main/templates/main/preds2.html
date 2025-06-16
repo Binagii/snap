@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar styling */
+.sidebar {
+    width: 250px;
+    background-color: #2c3e50;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    height : 100vh;
+    position : fixed;
+    left : 0;
+    top : 0;
+}
+
+.sidebar h2 {
+    font-size: 22px;
+    margin-bottom: 30px;
+    color: #1abc9c;
+}
+
+.sidebar a {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px 15px;
+    margin-bottom: 50px ;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background-color: #1abc9c;
+}
+
+.sidebar .menu-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .menu-item:last-child {
+    margin-top: auto; /* Pushes the logout link to the bottom */
+}
+
+/* Main content styling */
+.main-content {
+    margin-left : 120px;
+    flex-grow: 1;
+    background-color: #f9f9f9;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+        
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-top: 20px;
+        }
+
+        #controls {
+            margin: 20px auto;
+            text-align: center;
+            max-width: 900px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #controls label {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        #controls label:hover {
+            background-color: #45a049;
+        }
+
+        #controls input {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        button {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        
+.button-container {
+    display: flex;
+    justify-content: center; /* Centers the buttons horizontally */
+    gap: 10px; /* Adds spacing between buttons */
+    margin-top: 15px; /* Adds space from the above section */
+}
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #csvTable {
+            margin: 20px auto;
+            max-width: 90%;
+            
+            overflow-x: auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #csvTable table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #csvTable th, #csvTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #csvTable th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Dashboard</h2>
+        
+        <a href="#" class="menu-item " data-url="{% url 'view_profile_businessman' %}">My Profile</a>
+        <a href="{% url 'linkedin_charts' %}">View Visualization</a>
+        <a href="#" class="menu-item active" data-url="{% url 'preds2' %}">Edit rows and columns</a>
+        <a href="{% url 'train_model' %}">Prediction Model</a>
+        <a href="#" class="menu-item " data-url="{% url 'linkedin_upload_csv_file' %}">Upload CSV to Neo4j</a>
+        <a href="#" class="menu-item" data-url="{% url 'view_businessman_accounts' %}">View User Accounts</a>
+        <a href="{% url 'testimonial_page' %}">Submit Testimonial</a>
+        <a href="{% url 'admin_logout' %}">Logout</a>
+    </div>
+
+    
+<div class="main-content" id="main-content">   
+<h1>Upload and View CSV</h1>
+<input type="file" id="csvFileInput" accept=".csv" />
+<div id="controls"></div>
+<div class="button-container">
+<button id="removeRowsButton">Remove Selected Columns</button>
+<button id="saveCsvButton">Save CSV</button>
+</div>
+<div id="csvTable"></div>
+
+</div> 
+
+<script>
+    let csvData = [];
+    let columnVisibility = {};
+
+    document.getElementById('csvFileInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            Papa.parse(file, {
+                complete: function(results) {
+                    processCSVData(results.data);
+                },
+                header: true,
+                skipEmptyLines: true,
+                dynamicTyping: true
+            });
+        }
+    });
+
+    function processCSVData(data) {
+        csvData = data.map((row) => {
+            return {
+                'Company_Name': row['Company_Name'],
+                'Class': row['Class'],
+                'Designation': row['Designation'],
+                'Location': row['Location'],
+                'Total_applicants': row['Total_applicants'],
+                'LinkedIn_Followers': row['LinkedIn_Followers'],
+                'Level': row['Level'],
+                'Involvement': row['Involvement'],
+                'Employee_count': row['Employee_count'],
+                'Industry': row['Industry'],
+                'PYTHON': row['PYTHON'],
+                'C++': row['C++'],
+                'JAVA': row['JAVA'],
+                'HADOOP': row['HADOOP'],
+                'SCALA': row['SCALA'],
+                'FLASK': row['FLASK'],
+                'PANDAS': row['PANDAS'],
+                'SPARK': row['SPARK'],
+                'NUMPY': row['NUMPY'],
+                'PHP': row['PHP'],
+                'SQL': row['SQL'],
+                'MYSQL': row['MYSQL'],
+                'CSS': row['CSS'],
+                'MONGODB': row['MONGODB'],
+                'NLTK': row['NLTK'],
+                'TENSORFLOW': row['TENSORFLOW'],
+                'LINUX': row['LINUX'],
+                'RUBY': row['RUBY'],
+                'JAVASCRIPT': row['JAVASCRIPT'],
+                'DJANGO': row['DJANGO'],
+                'REACT': row['REACT'],
+                'REACTJS': row['REACTJS'],
+                'AI': row['AI'],
+                'UI': row['UI'],
+                'TABLEAU': row['TABLEAU'],
+                'NODEJS': row['NODEJS'],
+                'EXCEL': row['EXCEL'],
+                'POWER BI': row['POWER BI'],
+                'SELENIUM': row['SELENIUM'],
+                'HTML': row['HTML'],
+                'ML': row['ML']
+            };
+        });
+
+        if (Object.keys(columnVisibility).length === 0) {
+            columnVisibility = Object.keys(csvData[0]).reduce((acc, key) => {
+                acc[key] = true;
+                return acc;
+            }, {});
+        }
+
+        displayTable(csvData);
+        createCheckboxes(csvData);
+    }
+
+    function displayTable(data) {
+        const table = document.createElement('table');
+        table.border = 1;
+        const headerRow = document.createElement('tr');
+
+        Object.keys(data[0]).forEach(key => {
+            const th = document.createElement('th');
+            th.textContent = key;
+            th.dataset.column = key;
+            th.style.display = columnVisibility[key] ? '' : 'none';
+            headerRow.appendChild(th);
+        });
+        table.appendChild(headerRow);
+
+        data.forEach((row) => {
+            const tr = document.createElement('tr');
+            Object.keys(row).forEach(key => {
+                const td = document.createElement('td');
+                td.textContent = row[key];
+                td.dataset.column = key;
+                td.style.display = columnVisibility[key] ? '' : 'none';
+                tr.appendChild(td);
+            });
+            table.appendChild(tr);
+        });
+
+        const csvTable = document.getElementById('csvTable');
+        csvTable.innerHTML = ''; // Keep the table structure intact
+        csvTable.appendChild(table);
+    }
+
+    function createCheckboxes(data) {
+        const controls = document.getElementById('controls');
+        controls.innerHTML = '';
+        Object.keys(data[0]).forEach(key => {
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = columnVisibility[key];
+            checkbox.dataset.column = key;
+            checkbox.addEventListener('change', function() {
+                toggleColumn(key, checkbox.checked);
+            });
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(key));
+            controls.appendChild(label);
+        });
+    }
+
+    function toggleColumn(column, show) {
+        columnVisibility[column] = show;
+        const cells = document.querySelectorAll(`[data-column="${column}"]`);
+        cells.forEach(cell => {
+            cell.style.display = show ? '' : 'none';
+        });
+    }
+
+    document.getElementById('removeRowsButton').addEventListener('click', function() {
+        const selectedColumns = Array.from(document.querySelectorAll('#controls input:checked')).map(input => input.dataset.column);
+        selectedColumns.forEach(column => {
+            columnVisibility[column] = false;
+        });
+        displayTable(csvData); // Update table view without clearing the table
+    });
+
+    document.getElementById('saveCsvButton').addEventListener('click', function() {
+        const csvContent = Papa.unparse(csvData);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'filtered_data.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        $(".menu-item").on("click", function (e) {
+            e.preventDefault();
+            $(".menu-item").removeClass("active");
+            $(this).addClass("active");
+            $("#main-content").html("<div class='loading'>Loading...</div>");
+            $.get($(this).data("url"), function (data) {
+                $("#main-content").html(data);
+            }).fail(function () {
+                $("#main-content").html("<div class='loading'>Failed to load content.</div>");
+            });
+        });
+    });
+</script>
+</body>
+</html>

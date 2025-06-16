@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create User Account</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f3f4f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+
+<div style="top: 100px; margin: auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); width: 400px;">
+    <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px;">Create a New User Account</h1>
+
+    <form method="POST" action="{% url 'create_user_account' %}" style="display: flex; flex-direction: column; gap: 15px;">
+        {% csrf_token %}
+        
+        <label for="username" style="font-size: 14px; font-weight: bold;">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter Username" required style="padding: 10px; border: 1px solid #d1d5db; border-radius: 5px;">
+
+        <label for="email" style="font-size: 14px; font-weight: bold;">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter Email" required style="padding: 10px; border: 1px solid #d1d5db; border-radius: 5px;">
+
+        <label for="password" style="font-size: 14px; font-weight: bold;">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter Password" required style="padding: 10px; border: 1px solid #d1d5db; border-radius: 5px;">
+
+        <label for="role" style="font-size: 14px; font-weight:bold ;">Role</label>
+        <select id="role" name="role" required style="padding: 10px; border: 1px solid #d1d5db; border-radius: 5px;">
+            <option value="businessman">Businessman</option>
+            <option value="content_creator">Content Creator</option>
+            <option value="data_analyst">Data Analyst</option>
+        </select>
+    
+        <button type="submit" style="background-color: #636ae8; color: #ffffff; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+            Create Account
+        </button>
+    </form>
+
+    
+
+
+
+
+    
+    
+    <a href="{% url 'admin_login' %}" style="display: block; margin-top: 15px; text-align: center; text-decoration: none; color: #636ae8; font-size: 14px;">Already have an Account? Login</a>
+    
+
+   
+
+    {% if messages %}
+        <div style="margin-top: 20px;">
+            {% for message in messages %}
+                <p style="color: red; font-size: 14px; text-align: center;">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+
+
+
+</body>
+</html>

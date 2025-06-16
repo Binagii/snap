@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Creator Dashboard</title>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            height : 100vh;
+            position : fixed;
+            left : 0;
+            top : 0;
+        }
+
+        .sidebar h2 {
+            font-size: 22px;
+            margin-bottom: 30px;
+            color: #1abc9c;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #fff;
+            padding: 10px 15px;
+            margin-bottom: 50px ;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background-color: #1abc9c;
+        }
+
+        .sidebar .menu-items {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar .menu-item:last-child {
+            margin-top: auto; /* Pushes the logout link to the bottom */
+        }
+
+        /* Main content styling */
+        .main-content {
+            flex-grow: 1;
+            background-color: #f9f9f9;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .main-content .loading {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+        }
+
+        footer {
+            text-align: center;
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+             
+           
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Dashboard</h2>
+       
+        <div class="sidebar">
+            <h2>Dashboard</h2>
+            
+            <a href="#" class="menu-item active" data-url="{% url 'view_profile_businessman' %}">My Profile</a>
+            <a href="#" class="menu-item" data-url="{% url 'upload_and_view_charts' %}">Upload File</a>
+            <a href="#" class="menu-item" data-url="{% url 'scrape_profile' %}">Scrape Profile</a>
+            <a href="#" class="menu-item" data-url="{% url 'preds' %}">Edit rows and columns</a>
+            <a href="#" class="menu-item" data-url="/predict_engagement/">Prediction Model</a>
+            <a href="#" class="menu-item" data-url="{% url 'upload_csv' %}">Upload CSV to Neo4j</a>
+            <a href="#" class="menu-item" data-url="{% url 'view_content_creator_accounts' %}">View User Accounts</a>
+            <a href="{% url 'testimonial_page' %}">Submit Testimonial</a>
+            <a href="{% url 'admin_logout' %}">Logout</a>
+            
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content" id="main-content">
+        <div class="loading">Loading My Profile...</div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        © 2024 Content Creator Dashboard. All rights reserved.
+    </footer>
+
+    <script>
+        $(document).ready(function () {
+            // Load default content (My Profile) when the page loads
+            loadContent("{% url 'view_profile_content_creator' %}");
+
+
+           
+            // Attach click event to menu items
+            $('.menu-item').not('.logout-link').on('click', function (e) {
+                e.preventDefault();
+
+                // Remove active class from all menu items
+                $('.menu-item').removeClass('active');
+
+                // Add active class to clicked menu item
+                $(this).addClass('active');
+
+                // Get URL from data attribute
+                const url = $(this).data('url');
+
+                // Load content dynamically
+                loadContent(url);
+            });
+
+            
+
+            function loadContent(url) {
+                const contentArea = $('#main-content');
+                contentArea.html('<div class="loading">Loading...</div>');
+
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    success: function (data) {
+                        contentArea.html(data);
+                    },
+                    error: function (xhr, status, error) {
+                        contentArea.html('<div class="loading">Failed to load content. Please try again later.</div>');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

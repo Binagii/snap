@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Profile Scraper</title>
+    <link rel="stylesheet" href="{% static 'scraper.css' %}">
+    <style>
+        .hidden { display: none; }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            font-size: 14px;
+            color: #333;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Instagram Profile Scraper</h2>
+
+        <!-- Login Form -->
+        <form id="loginForm" method="POST" action="{% url 'login_instagram' %}">
+            {% csrf_token %}
+            <h3>Login</h3>
+            <label for="username">Instagram Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter Instagram username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            <button type="submit">Login</button>
+        </form>
+
+        <!-- Scrape Form (Hidden Initially) -->
+        <form id="scrapeForm" class="hidden" method="POST" action="{% url 'scrape_profile' %}">
+            {% csrf_token %}
+            <h3>Scrape</h3>
+            <label for="profile_username">Instagram Profile to Scrape:</label>
+            <input type="text" id="profile_username" name="profile_username" placeholder="Enter profile username" required>
+            <label for="num_posts">Number of posts to scrape:</label>
+            <input type="number" id="num_posts" name="num_posts" min="1" value="10" required>
+            <button type="submit">Scrape Profile</button>
+        </form>
+
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginForm = document.getElementById('loginForm');
+            const scrapeForm = document.getElementById('scrapeForm');
+            const resultDiv = document.getElementById('result');
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            loginForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                resultDiv.textContent = 'Logging in... Please wait.';
+                
+                const formData = new FormData(loginForm);
+                formData.append('csrfmiddlewaretoken', csrfToken);
+                
+                try {
+                    const response = await fetch(loginForm.action, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        resultDiv.textContent = 'Login successful! You can now scrape profiles.';
+                        scrapeForm.classList.remove("hidden");
+                        loginForm.classList.add("hidden");
+                    } else {
+                        resultDiv.textContent = `Login failed: ${data.error}`;
+                    }
+                } catch (error) {
+                    resultDiv.textContent = 'An error occurred during login. Please try again.';
+                    console.error(error);
+                }
+            });
+
+            scrapeForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                resultDiv.textContent = 'Scraping... Please wait.';
+                
+                const formData = new FormData(scrapeForm);
+                formData.append('csrfmiddlewaretoken', csrfToken);
+                
+                try {
+                    const response = await fetch(scrapeForm.action, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        resultDiv.innerHTML = `<p>Scraping complete! File saved at: <strong>${data.csv_path}</strong></p>`;
+                    } else {
+                        resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = '<p>An error occurred while scraping. Please try again.</p>';
+                    console.error(error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

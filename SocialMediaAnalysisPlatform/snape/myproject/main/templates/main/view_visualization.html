@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar h2 {
+            font-size: 22px;
+            margin-bottom: 30px;
+            color: #1abc9c;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #fff;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background-color: #1abc9c;
+        }
+
+        .sidebar .menu-items {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar .menu-item:last-child {
+            margin-top: auto; /* Pushes the logout link to the bottom */
+        }
+
+        /* Content container styling */
+        .container {
+            margin-left: 270px; /* Adjust this to match the sidebar width + spacing */
+            padding: 20px;
+            flex: 1;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        h2, h3 {
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group select, .form-group button {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        .form-group button {
+            background-color: #636ae8;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .form-group button:hover {
+            background-color: #4b56e8;
+        }
+
+        .graph-container {
+            text-align: center;
+            margin: 20px 0;
+            background-color: #e9eefc;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .graph-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #636ae8;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .form-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            table th, table td {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .container {
+                margin-left: 0;
+                padding: 10px;
+            }
+
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-around;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Dashboard</h2>
+    <a href="{% url 'view_profile_businessman' %}" class="menu-item">My Profile</a>
+    <a href="{% url 'upload_csv_or_xlsx' %}" class="menu-item">Upload File</a>
+    <a href="{% url 'download_csv' %}" class="menu-item">Download CSV</a>
+    <a href="{% url 'view_businessman_accounts' %}" class="menu-item">View User Accounts</a>
+    <a href="{% url 'create_businessman_account' %}" class="menu-item">Create Account</a>
+    <a href="{% url 'admin_logout' %}" class="menu-item">Logout</a>
+</div>
+
+<div class="container">
+    <h2>Graph Visualization</h2>
+
+    <form method="get" action="" class="form-group">
+        <label for="layout">Select Layout:</label>
+        <select name="layout" id="layout">
+            <option value="kamada_kawai">Kamada-Kawai</option>
+            <option value="spring">Spring Layout</option>
+            <option value="circular">Circular Layout</option>
+        </select>
+        <button type="submit">Update Layout</button>
+    </form>
+
+    <div class="graph-container">
+        <p>Nodes: {{ node_count }}, Edges: {{ edge_count }}</p>
+        <div>{{ graph_html|safe }}</div>
+    </div>
+
+    <h3>Test Predictive Models</h3>
+    <form method="get" action="{% url 'test_predictive_models' %}" class="form-group">
+        <label for="target_column">Select Target Column:</label>
+        <select id="target_column" name="target_column" required>
+            {% for column in headers %}
+            <option value="{{ column }}">{{ column }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="model_type">Select Model:</label>
+        <select id="model_type" name="model_type">
+            <option value="random_forest">Random Forest</option>
+            <option value="decision_tree">Decision Tree</option>
+        </select>
+        <button type="submit">Run Model</button>
+    </form>
+
+    <h3>Top 10 Influential Nodes</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Node</th>
+                <th>Degree Centrality</th>
+                <th>Closeness Centrality</th>
+                <th>Betweenness Centrality</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in centrality_results %}
+            <tr>
+                <td>{{ result.node }}</td>
+                <td>{{ result.degree }}</td>
+                <td>{{ result.closeness }}</td>
+                <td>{{ result.betweenness }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

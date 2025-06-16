@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+</head>
+<body>
+
+    <style>
+
+        body {
+            font-family : Arial, sans-serif;
+            margin: 0;
+            padding : 0;
+            background-color : #f7fafc;
+        }
+        
+        .dashboard {
+            display : flex;
+        }
+
+        .sidebar {
+            width : 20%;
+            background-color : #2d3748;
+            color : white;
+            padding : 1rem;
+            height : 100vh;
+        }
+
+        .sidebar ul {
+            list-style : none;
+            padding : 0;
+        }
+
+        .sidebar ul li {
+            margin : 1rem 0;
+        }
+
+        .sidebar ul li a {
+            color : white;
+            text-decoration : none;
+        }
+
+        .settings {
+            width : 80%;
+            padding : 2rem;
+        }
+
+        .settings-header {
+            display : flex;
+            justify-content : space-between;
+            align-items : center;
+        }
+
+        .settigs-header h2 {
+            margin : 0;
+        }
+
+        .tabs button {
+            background-color : #e2e8f0;
+            border : none;
+            padding : 0.5rem 1rem;
+            cursor : pointer;
+            margin-left : 1rem;
+        }
+
+        .settings-form {
+            margin-top : 1rem;
+        }
+
+        .settings-form label {
+            display : block;
+            margin-bottom : 1rem;
+        }
+
+        .settings-form input {
+            width : 100%;
+            padding : 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .settings-form button {
+            background-color : #3182ce;
+            color : white;
+            padding : 0.5rem 1rem;
+            border : none;
+            cursor : pointer;
+        }
+
+
+
+    </style>
+
+    <div class="dashboard">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="#">My Files</a></li>
+                    <li><a href="#">Upload File</a></li>
+                </ul>
+            </nav>
+            <footer>
+                <a href="#">Settings</a>
+                <a href="#">Logout</a>
+            </footer>
+
+        </aside>
+        <main class="settings">
+
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <div class="tabs">
+                    <button>Profile</button>
+                    <button>Privacy</button>
+                    <button>Analytics</button>
+
+                </div>
+            </div>
+
+            <form class="settings-form" method="POST">
+                <label>
+                    First Name : 
+                    <input type="text" name="first_name" value="{{ user.first_name}}" required>
+
+
+                </label>
+
+                <label>
+                   Last Name : 
+                    <input type="text" name="first_name" value="{{ user.first_name}}" required>
+                    
+
+                </label>
+
+                <label>
+                    Email : 
+                    <input type="text" name="first_name" value="{{ user.first_name}}" required>
+                    
+
+                </label>
+
+                <label>
+                    Role : 
+                    <input type="text" name="first_name" value="{{ user.first_name}}" required>
+                    
+
+                </label>
+
+                <label>
+                    New Password : 
+                    <input type="text" name="first_name" value="{{ user.first_name}}" required>
+                    
+
+                </label>
+
+                <label>
+                    Confirm Password : 
+                    <input type="text" name="first_name" value="{{ user.first_name}}" required>
+                    
+
+                </label>
+                <button type="submit">Save</button>
+            </form>
+
+        </main>
+    </div>
+    
+</body>
+</html>

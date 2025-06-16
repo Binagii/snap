@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Businessman Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ced4da;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #343a40;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .action-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Businessman Dashboard</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Company</th>
+                    <th>Timezone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profile in user_profile %}
+                <tr data-id="{{ profile.profile_id}}">
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ profile.first_name }}</td>
+                    <td>{{ profile.last_name }}</td>
+                    <td>{{ profile.company }}</td>
+                    <td>{{ profile.timezone }}</td>
+                    <td>
+                        <a href="#" class="action-btn">Edit</a>
+                        <a href="#" class="action-btn delete-btn" style="background-color: #dc3545;">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center;">No profiles found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+<script>
+    document.querySelectorAll('.action-btn').forEach((button) => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+    
+            const row = this.closest('tr'); // Get the current row
+            const profileId = row.dataset.id; // Fetch profile_id from data-id attribute
+    
+            if (!profileId) {
+                console.error('Profile ID is undefined!');
+                alert('Error: Profile ID is missing. Please check the data.');
+                return; // Exit if profile_id is not found
+            }
+    
+            console.log('Profile ID:', profileId); // Debugging
+            const cells = row.querySelectorAll('td');
+            const editButton = this;
+    
+            if (editButton.textContent === 'Edit') {
+                // Change button text to "Save"
+                editButton.textContent = 'Save';
+    
+                for (let i = 1; i <= 4; i++) {
+                    const cell = cells[i];
+                    const value = cell.textContent.trim();
+                    cell.innerHTML = `<input type="text" value="${value}" />`;
+                }
+            } else {
+                const updatedData = {
+                    first_name: cells[1].querySelector('input').value,
+                    last_name: cells[2].querySelector('input').value,
+                    company: cells[3].querySelector('input').value,
+                    timezone: cells[4].querySelector('input').value,
+                };
+    
+                console.log('Updated Data:', updatedData); // Debugging
+                console.log(`Fetch URL: /update_profile/${profileId}/`); // Debugging
+    
+                fetch(`/update_profile/${profileId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify(updatedData),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.status === 'success') {
+                            cells[1].textContent = updatedData.first_name;
+                            cells[2].textContent = updatedData.last_name;
+                            cells[3].textContent = updatedData.company;
+                            cells[4].textContent = updatedData.timezone;
+    
+                            editButton.textContent = 'Edit';
+                            alert('Profile updated successfully.');
+                        } else {
+                            alert('Failed to update profile. Please try again.');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        alert('An error occurred while saving the profile.');
+                    });
+            }
+        });
+    });
+
+</script>

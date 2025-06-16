@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CSV and View Charts</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            width: 90%;
+            max-width: 1700px;
+            text-align: center;
+            margin-top: 30px;
+        }    
+
+        /* Form Title */
+        h1 {
+            font-size: 30px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Labels */
+        label {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            color: #444;
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        /* Inputs & Select Dropdowns */
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-top: 5px;
+            transition: 0.3s;
+        }
+
+        input[type="file"]:focus,
+        select:focus {
+            border-color: #6366f1;
+            outline: none;
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Upload Button */
+        .upload-button {
+            background-color: #6366f1;
+            color: #ffffff;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .upload-button:hover {
+            background-color: #4f46e5;
+            transform: scale(1.03);
+        }
+
+        /* Back Button */
+        .back-button {
+            display: inline-block;
+            background-color: #ff6b6b;
+            color: white;
+            font-size: 16px;
+            padding: 12px 18px;
+            border-radius: 8px;
+            text-decoration: none; /* Remove underline */
+            font-weight: bold;
+            text-align: center;
+            transition: background 0.3s, transform 0.2s;
+            margin-top: 20px;
+        }
+        
+        .back-button:hover {
+            background-color: #e63946;
+            transform: scale(1.05);
+        }
+        
+        /* Charts Container */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            width: 95%;
+            max-width: 1900px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .chart {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .chart img {
+            width : 100%;
+            max-width : 1000px;
+            height : auto;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+                width: 100%;
+            }
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            label {
+                font-size: 14px;
+            }
+            input, select {
+                font-size: 14px;
+                padding: 10px;
+            }
+            .upload-button {
+                font-size: 16px;
+                padding: 12px;
+            }
+            .back-button {
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Upload Form Container -->
+    <div class="container">
+        {% if not fig_html_list %}
+        <h1>Upload CSV and View Charts</h1>
+        <form action="{% url 'upload_and_view_charts' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <label for="csv_file">Choose a CSV file:</label>
+            <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+
+            <label for="platform">Select Platform:</label>
+            <select id="platform" name="platform" required>
+                <option value="instagram" selected>Instagram</option>
+                <option value="tiktok">TikTok</option>
+                <option value="linkedin">LinkedIn</option>
+            </select>
+
+            <label for="sponsored">Sponsored:</label>
+            <select id="sponsored" name="sponsored" required>
+                <option value="all" selected>All</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+
+            <label for="post_type">Post Type:</label>
+            <select id="post_type" name="post_type" required>
+                <option value="all" selected>All</option>
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+            </select>
+
+            <label for="time_duration">Time Duration:</label>
+            <select id="time_duration" name="time_duration" required>
+                <option value="month" selected>Month</option>
+                <option value="day_of_week">Day of the Week</option>
+                <option value="hour">Hour</option>
+            </select>
+
+            <button type="submit" class="upload-button">Upload and View Charts</button>
+        </form>
+        {% else %}
+        <!-- Show Charts -->
+        <div class="charts-container">
+            {% for chart_html in fig_html_list %}
+            <div class="chart">
+                {{ chart_html|safe }}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Back Button -->
+        <a href="{% url 'businessman_dashboard' %}" class="back-button">⬅ Back To Dashboard</a>
+        {% endif %}
+    </div>
+
+</body>
+</html>

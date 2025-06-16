@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Graph Visualization</title>
+    <style>
+        /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+
+/* Graph Container */
+#graph {
+    height: 600px;
+    width: 100%;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* Controls Section */
+#controls {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+#controls label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+#controls select, #controls input {
+    padding: 8px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+#controls button {
+    padding: 10px 15px;
+    background: #1abc9c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+#controls button:hover {
+    background: #16a085;
+}
+
+/* Legend Section */
+#legend {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+#legend h3 {
+    margin-bottom: 10px;
+}
+
+/* Top Nodes Table */
+#top-nodes {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th {
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
+    text-align: left;
+}
+
+td {
+    padding: 8px;
+    font-size: 14px;
+}
+
+tr:nth-child(even) {
+    background: #f2f2f2;
+}
+
+.back-button {
+    display: inline-block;
+    background-color: #ff6b6b;
+    color: white;
+    font-size: 16px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    text-decoration: none; /* Remove underline */
+    font-weight: bold;
+    width: 500px;
+    text-align: center;
+    margin-left : 700px;
+    transition: background 0.3s, transform 0.2s;
+    margin-top: 20px;
+    font-size: 14px;
+    padding: 10px 16px;
+}
+
+.back-button:hover {
+    background-color: #e63946;
+    transform: scale(1.05);
+}
+
+
+
+    </style>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+<body>  
+       
+
+    
+    <div id="controls">
+        <label for="layout">Select Layout:</label>
+        <select id="layout" onchange="changeLayout()">
+            <option value="default">Default</option>
+            <option value="spring">Spring</option>
+            <option value="circular">Circular</option>
+            <option value="kamada-kawai">Kamada-Kawai</option>
+        </select>
+        <br><br>
+        <label for="search">Search for a Hashtag:</label>
+        <input type="text" id="search" placeholder="Enter hashtag" oninput="debouncedSearchHashtag()">
+        <br><br>
+        <button onclick="saveVisualization()">Save Visualization</button>
+    </div>
+    <div id="graph"></div>
+    <div id="legend">
+        <h3>Legend</h3>
+        <p><strong>Node:</strong> Hashtag</p>
+        <p><strong>Edge:</strong> Co-occurrence of hashtags in the same post</p>
+        <p><strong>Node Size:</strong> Degree centrality (importance)</p>
+        <p><strong>Node Color:</strong> Betweenness centrality (influence)</p>
+    </div>
+    <div id="top-nodes">
+        <h3>Top 10 Influential Nodes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Node</th>
+                    <th>Eigenvector Centrality</th>
+                    <th>Betweenness Centrality</th>
+                    <th>Degree Centrality</th>
+                    <th>Closeness Centrality</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in centrality_results %}
+                <tr>
+                    <td>{{ result.label }}</td>
+                    <td>{{ result.eigenvector }}</td>
+                    <td>{{ result.betweenness }}</td>
+                    <td>{{ result.degree }}</td>
+                    <td>{{ result.closeness }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    </div>
+    
+    <!-- Back Button -->
+    <a href="{% url 'businessman_dashboard' %}" class="back-button">⬅ Back To Dashboard</a>
+
+</div>
+        
+
+
+
+
+    <script>
+        var nodes = JSON.parse('{{ nodes|escapejs }}');
+        var edges = JSON.parse('{{ edges|escapejs }}');
+
+        // Function to format floating-point numbers to the desired convention
+        function formatNumber(num) {
+            return num.toFixed(16);
+        }
+
+        // Determine the node with the highest degree centrality
+        var maxDegreeNode = nodes.reduce((maxNode, node) => {
+            return node.degree > (maxNode.degree || 0) ? node : maxNode;
+        }, {});
+
+        // Convert nodes and edges to vis-network format
+        var visNodes = nodes.map(function(node) {
+            var color = node.id === maxDegreeNode.id ? '#ff0000' : '#0000ff';  // Highlight the most important node
+            return { 
+                id: node.id, 
+                label: node.label, 
+                title: 'Betweenness: ' + formatNumber(node.betweenness) + '\nEigenvector: ' + formatNumber(node.eigenvector) + '\nDegree: ' + formatNumber(node.degree) + '\nCloseness: ' + formatNumber(node.closeness),
+                color: {
+                    border: color,
+                    background: color
+                }
+            };
+        });
+
+        var visEdges = edges.map(function(edge) {
+            return { from: edge.from, to: edge.to };
+        });
+
+        // Create a network
+        var container = document.getElementById('graph');
+        var data = {
+            nodes: new vis.DataSet(visNodes),
+            edges: new vis.DataSet(visEdges)
+        };
+        var options = {
+            interaction: {
+                hover: true,
+                navigationButtons: true,
+                keyboard: true
+            },
+            nodes: {
+                shape: 'dot',
+                size: 16,
+                font: {
+                    size: 16,
+                    color: '#000000'
+                },
+                borderWidth: 2
+            },
+            edges: {
+                width: 2,
+                color: {
+                    color: '#0000ff',  // Edge color
+                    highlight: '#ff0000',  // Edge color when highlighted
+                    hover: '#00ff00'  // Edge color when hovered
+                }
+            },
+            physics: {
+                enabled: true
+            },
+            layout: {
+                improvedLayout: false  // Disable improved layout for better performance
+            }
+        };
+        var network = new vis.Network(container, data, options);
+
+        // Store original data for reset
+        var originalData = {
+            nodes: new vis.DataSet(visNodes),
+            edges: new vis.DataSet(visEdges)
+        };
+
+        // Change layout functionality
+        function changeLayout() {
+            var layout = document.getElementById('layout').value;
+            switch (layout) {
+                case 'spring':
+                    network.setOptions({
+                        layout: {
+                            hierarchical: false
+                        },
+                        physics: {
+                            forceAtlas2Based: {
+                                gravitationalConstant: -50,
+                                centralGravity: 0.01,
+                                springLength: 100,
+                                springConstant: 0.08
+                            },
+                            maxVelocity: 50,
+                            solver: 'forceAtlas2Based',
+                            timestep: 0.35,
+                            stabilization: { iterations: 150 }
+                        }
+                    });
+                    break;
+                case 'circular':
+                    network.setOptions({
+                        layout: {
+                            hierarchical: false
+                        },
+                        physics: {
+                            enabled: false
+                        }
+                    });
+                    network.once('stabilizationIterationsDone', function () {
+                        network.setOptions({
+                            layout: {
+                                improvedLayout: true
+                            }
+                        });
+                    });
+                    break;
+                case 'kamada-kawai':
+                    network.setOptions({
+                        layout: {
+                            hierarchical: false
+                        },
+                        physics: {
+                            barnesHut: {
+                                gravitationalConstant: -2000,
+                                centralGravity: 0.3,
+                                springLength: 95,
+                                springConstant: 0.04,
+                                damping: 0.09
+                            },
+                            maxVelocity: 50,
+                            solver: 'barnesHut',
+                            timestep: 0.5,
+                            stabilization: { iterations: 150 }
+                        }
+                    });
+                    break;
+                default:
+                    network.setOptions({
+                        layout: {
+                            hierarchical: false
+                        },
+                        physics: {
+                            enabled: true
+                        }
+                    });
+                    break;
+            }
+            network.stabilize();
+        }
+
+        // Search for a hashtag functionality
+        function searchHashtag() {
+            var searchValue = document.getElementById('search').value.toLowerCase();
+            if (searchValue === "") {
+                // Reset to original data if search is cleared
+                network.setData(originalData);
+                return;
+            }
+
+            var filteredNodes = visNodes.filter(function(node) {
+                return node.label.toLowerCase().includes(searchValue);
+            });
+
+            if (filteredNodes.length > 0) {
+                var nodeIds = filteredNodes.map(function(node) { return node.id; });
+                var connectedNodes = [];
+                nodeIds.forEach(function(nodeId) {
+                    connectedNodes = connectedNodes.concat(network.getConnectedNodes(nodeId));
+                });
+
+                var allNodes = network.body.data.nodes.get();
+                var allEdges = network.body.data.edges.get();
+
+                var newNodes = allNodes.filter(function(node) {
+                    return nodeIds.includes(node.id) || connectedNodes.includes(node.id);
+                });
+
+                var newEdges = allEdges.filter(function(edge) {
+                    return nodeIds.includes(edge.from) || nodeIds.includes(edge.to);
+                });
+
+                network.setData({
+                    nodes: new vis.DataSet(newNodes),
+                    edges: new vis.DataSet(newEdges)
+                });
+            } else {
+                alert('Hashtag not found');
+            }
+        }
+
+        // Save visualization functionality
+        function saveVisualization() {
+            html2canvas(document.getElementById('graph')).then(canvas => {
+                canvas.toBlob(function(blob) {
+                    var formData = new FormData();
+                    formData.append('image', blob, 'visualization.png');
+                    fetch('/save-visualization/', {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => {
+                        if (response.ok) {
+                            alert('Visualization saved successfully!');
+                        } else {
+                            alert('Failed to save visualization.');
+                        }
+                    });
+                });
+            });
+        }
+
+        // Debounce function to improve performance
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const debouncedSearchHashtag = debounce(searchHashtag, 300);
+    </script>
+
+    
+</body>
+</html>

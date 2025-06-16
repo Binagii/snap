@@ -1,0 +1,221 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories</title>
+    
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="{% static 'index.js' %}"></script>
+</head>
+<body>
+
+   
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .main-container {
+        display: flex;
+        flex: 1;
+        height: 100%;
+    }
+    
+    
+    
+    /* Content Container */
+    .content-container {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background-color: #f9f9f9;
+        overflow-y: auto; /* Ensures scroll for long content */
+    }
+    
+    /* Table Styling */
+    .category-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 20px;
+    }
+    
+    .category-table th,
+    .category-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #e4e7ec;
+    }
+    
+    .category-table th {
+        background-color: #f9fafb;
+        font-size: 14px;
+        font-weight: bold;
+        color: #1d2939;
+    }
+    
+    .category-table td {
+        font-size: 14px;
+        color: #565d6d;
+    }
+    
+    .category-table tr:hover {
+        background: #f1f1f1;
+    }
+    
+    /* Header and Action Bar */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .action-bar {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .action-bar .button {
+        background-color: #636ae8;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        text-decoration: none;
+    }
+    
+    .action-bar .button:hover {
+        background-color: #4b56e8;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .sidebar-menu {
+            position: fixed;
+            width: 100%;
+            height: auto;
+            border-right: none;
+            border-bottom: 1px solid #e4e7ec;
+            flex-direction: row;
+            overflow-x: auto;
+        }
+    
+        .main-container {
+            flex-direction: column;
+        }
+    
+        .content-container {
+            padding: 15px;
+            margin-top: 80px; /* Adjust for the fixed sidebar on mobile */
+        }
+    }
+    
+</style>
+    
+
+
+
+
+
+
+
+
+<div class="main-container">
+    <!-- Sidebar -->
+   
+
+    <!-- Content -->
+    <div class="content-container">
+        <div class="header">
+            <h2 class="page-title">Categories</h2>
+            <div class="action-bar">
+                <button class="button add-category">
+                    <a href="{% url 'create_category' %}">Add Category</a>
+                </button>
+                <select class="filter-dropdown">
+                    <option>All</option>
+                    <option>Content Creator</option>
+                    <option>Business</option>
+                    <option>Analyst</option>
+                </select>
+                <input type="text" class="search-box" placeholder="Search Category" />
+            </div>
+        </div>
+
+        <table class="category-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Content</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                    <tr id="category-{{ category.id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ category.name }}</td>
+                        <td>{{ category.description }}</td>
+                        <td><button class="edit-btn" data-id="{{ category.id }}" data-name="{{ category.name }}" data-description="{{ category.description }}">Update</button> </td>
+                        
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">No categories found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<div id="edit-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #f9f9f9; padding: 20px; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+    <h3>Edit Category</h3>
+    <form id="edit-category-form">
+        {% csrf_token %}
+        <input type="hidden" id="category-id" name="category_id">
+        
+        <label for="category-name">Category Name:</label>
+        <input type="text" id="category-name" name="name" required><br>
+        
+        <label for="category-description">Description:</label>
+        <input type="text" id="category-description" name="description" required><br>
+
+        <button type="submit">Save</button>
+        <button type="button" id="close-modal">Close</button>
+    </form>
+</div>
+</div>
+
+
+
+
+</body>
+</html>
+
+
+

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <style>
+        /* Body Styling */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Login Container */
+.login-container {
+    background-color: #ffffff;
+    padding: 30px 40px;
+    border-radius: 16px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    text-align: center;
+}
+
+/* Welcome Heading */
+.login-container h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Textbox Wrapper */
+.textbox {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+/* Labels */
+.label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #4b5563;
+    margin-bottom: 5px;
+}
+
+/* Input Wrapper */
+.input-wrapper {
+    position: relative;
+}
+
+input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #f9fafb;
+    outline: none;
+}
+
+input:focus {
+    border-color: #636ae8;
+    background-color: #ffffff;
+}
+
+/* Dropdown */
+.dropdown select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #f9fafb;
+    outline: none;
+}
+
+select:focus {
+    border-color: #636ae8;
+    background-color: #ffffff;
+}
+
+/* Checkbox */
+.checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px; /* Add space between checkbox and label */
+    text-align: left;
+    font-size: 14px; /* Adjust label font size */
+    color: #4b5563; /* Set label color */
+}
+
+.checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #636ae8; /* Modern browsers: change checkbox color */
+    cursor: pointer;
+}
+
+.checkbox label {
+    cursor: pointer; /* Make the label clickable */
+    font-weight: 400;
+}
+
+
+/* Buttons */
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+}
+
+.button {
+    background-color: #636ae8;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.button:hover {
+    background-color: #4b56e8;
+}
+
+.forgot-password {
+    font-size: 14px;
+    color: #4b5563;
+    text-decoration: none;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+/* Divider */
+.divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+    margin: 0 10px;
+}
+
+.divider span {
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+/* Social Buttons */
+.social-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.social-button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background-color: #f3f4f6;
+    font-size: 16px;
+    color: #6b7280;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.social-button:hover {
+    background-color: #e5e7eb;
+}
+
+/* Register Link */
+.register-link {
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.register-link a {
+    color: #636ae8;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.register-link a:hover {
+    text-decoration: underline;
+}
+
+    </style>
+
+    
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Welcome back 👋</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <!-- Username -->
+                <div class="textbox">
+                    <label class="label" for="username">Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" placeholder="Enter your email" required>
+                        
+                    </div>
+                </div>
+                <!-- Password -->
+                <div class="textbox">
+                    <label class="label" for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        
+                    </div>
+                </div>
+                <!-- Dropdown -->
+                
+                <!-- Checkbox -->
+                <div class="checkbox">
+                    <input type="checkbox" id="keep-logged-in" name="keep_logged_in">
+                    <label for="keep-logged-in">Keep me logged in</label>
+                </div>
+                <!-- Buttons -->
+                <div class="button-container">
+                    <button class="button" type="submit">Sign in</button>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+                <!-- Divider -->
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+                <!-- Social Media Login -->
+                <div class="social-buttons">
+                    <button type="button" class="social-button google">G</button>
+                    <button type="button" class="social-button facebook">F</button>
+                    <button type="button" class="social-button apple">A</button>
+                </div>
+                <!-- Register Link -->
+                <p class="register-link">Not a member yet? <a href="{% url 'create_user_account' %}">Register now</a></p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

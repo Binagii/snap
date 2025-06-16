@@ -1,0 +1,5 @@
+name,age,from_location,klout_score
+Alice,25.0,New York,80.0
+Bob,30.0,Los Angeles,75.0
+Charlie,35.0,Chicago,90.0
+David,40.0,Houston,85.0

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo4j Graph Visualization</title>
+
+    <!-- html2canvas for screenshot functionality -->
+    <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <!-- vis-network for graph visualization -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f8f9fa;
+        margin: 20px;
+    }
+    h1 {
+        color: #333;
+    }
+    .button-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    button {
+        padding: 10px 15px;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        transition: 0.3s;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    #graph {
+        width: 90%;
+        height: 600px;
+        margin: 0 auto;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+    }
+    .loading {
+        font-size: 18px;
+        color: #007bff;
+        display: none;
+    }
+    #saveButton {
+        margin-top: 15px;
+        background-color: #28a745;
+    }
+    #saveButton:hover {
+        background-color: #218838;
+    }
+</style>
+<body>
+    <h1>Neo4j Graph Visualization</h1>
+
+    <!-- Button options to load graph data -->
+    <div>
+        <button onclick="loadGraph('LOCATED_IN')">Show LOCATED_IN</button>
+        <button onclick="loadGraph('OFFERS')">Show OFFERS</button>
+        <button onclick="loadGraph('PART_OF')">Show PART_OF</button>
+    </div>
+
+    <!-- Container for the graph -->
+    <div id="graph" style="height: 500px;"></div>
+
+    <!-- Save Button -->
+    <button id="saveButton" onclick="saveGraph()">Save Graph as Image</button>
+
+    <script>
+        // Function to load the graph based on the selected query type
+        function loadGraph(queryType) {
+            window.location.href = `?query_type=${queryType}`;
+        }
+
+        // Get the query_type from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryType = urlParams.get('query_type') || 'LOCATED_IN';  // Default to 'LOCATED_IN' if not specified
+
+        // Safely parse graph_data passed from Django as JSON
+        const graphData = JSON.parse('{{ graph_data|escapejs }}');  // Ensure that special characters are escaped
+
+        if (graphData.length > 0) {
+            // Prepare the nodes and edges for vis-network
+            const nodes = new vis.DataSet();
+            const edges = new vis.DataSet();
+
+            // Set to track added nodes and avoid duplicates
+            const addedNodes = new Set();
+
+            // Populate the nodes and edges from the graphData
+            graphData.forEach((data) => {
+                // Add nodes to vis network (only unique nodes)
+                data.nodes.forEach((node) => {
+                    if (!addedNodes.has(node.id)) {
+                        nodes.add({
+                            id: node.id,
+                            label: node.id,  // Set label as node id
+                        });
+                        addedNodes.add(node.id);  // Mark this node as added
+                    }
+                });
+
+                // Add edges between nodes
+                data.relationships.forEach((rel) => {
+                    edges.add({
+                        from: rel.source,
+                        to: rel.target,
+                        label: rel.relationship,  // Set label as relationship type
+                    });
+                });
+            });
+
+            // Create a network graph using vis-network
+            const container = document.getElementById('graph');
+            const data = { nodes: nodes, edges: edges };
+            const options = {
+                nodes: {
+                    shape: 'dot',
+                    size: 16,
+                    font: {
+                        size: 14
+                    }
+                },
+                edges: {
+                    width: 2,
+                    color: {
+                        highlight: '#ff7f00'
+                    },
+                    smooth: {
+                        type: 'continuous'
+                    }
+                },
+                physics: {
+                    enabled: true,
+                    solver: 'forceAtlas2Based',
+                    timestep: 0.5
+                },
+                interaction: {
+                    hover: true,
+                    zoomView: true
+                },
+                layout: {
+                    randomSeed: 2
+                }
+            };
+
+            // Initialize the network
+            const network = new vis.Network(container, data, options);
+
+            // Function to save the graph as an image using html2canvas
+            function saveGraph() {
+                html2canvas(container).then(function (canvas) {
+                    const imgData = canvas.toDataURL("image/png");
+                    const link = document.createElement('a');
+                    link.href = imgData;
+                    link.download = 'graph.png';
+                    link.click();
+                });
+            }
+
+            // Attach the saveGraph function to the save button
+            document.getElementById('saveButton').addEventListener('click', saveGraph);
+        }
+    </script>
+</body>
+</html>

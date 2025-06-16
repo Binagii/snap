@@ -1,0 +1,16 @@
+from main.models import Profile
+import uuid
+
+# Find profiles with None as profile_id
+profiles = Profile.objects.filter(profile_id__isnull=True)
+for profile in profiles:
+    profile.profile_id = str(uuid.uuid4())  # Assign a unique UUID
+    profile.save()
+
+# Verify the changes
+for profile in Profile.objects.all():
+    print(profile.profile_id, profile.first_name, profile.last_name)
+
+
+
+run in manage.py shell

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Social Media Data Extraction</title>
+</head>
+<body>
+    <h1>Extract Social Media Data</h1>
+    <form method="POST" action="/extract_social_media_data/">
+        {% csrf_token %}
+        <label for="platform">Select Platform:</label>
+        <select id="platform" name="platform">
+            <option value="facebook">Facebook</option>
+            <option value="instagram">Instagram</option>
+
+        </select>
+        <button type="submit">Extract Data</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Data Visibility</title>
+</head>
+<body>
+    <h1>Manage Data Visibility</h1>
+    <ul>
+        {% for item in data_items %}
+        <li>
+            <strong>{{ item.name }}</strong> - {{ item.get_visibility_display }}
+            (<a href="{% url 'update_visibility' item.id %}">Edit</a>)
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Model Training</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #eef2f5;
+        }
+        
+
+        /* Container for Form and Other Elements */
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        /* Success & Error Messages */
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Form Inputs */
+        input[type="file"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 80%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Button Styles */
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .back-button {
+            display: inline-block;
+            background-color: #ff6b6b;
+            color: white;
+            font-size: 16px;
+            padding: 12px 18px;
+            border-radius: 8px;
+            text-decoration: none; /* Remove underline */
+            font-weight: bold;
+            width: 500px;
+            text-align: center;
+            margin-left : 10px;
+            transition: background 0.3s, transform 0.2s;
+            margin-top: 20px;
+            font-size: 14px;
+            padding: 10px 16px;
+        }
+        
+        .back-button:hover {
+            background-color: #e63946;
+            transform: scale(1.05);
+        }
+
+        /* Locations List */
+        #locations-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            margin-top: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        /* Table Container - Full Width with Scroll */
+        .table-container {
+            width: 95%;
+            margin-top: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            overflow-x: auto; /* Allows scrolling */
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px; /* Ensures table takes full width */
+        }
+
+        /* Sticky Header */
+        thead th {
+            background: #007bff;
+            color: white;
+            padding: 12px;
+            text-transform: uppercase;
+            border: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        /* Table Rows */
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        /* Alternating Row Colors */
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tr:hover {
+            background: #e2e6ea;
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 768px) {
+            .container {
+                width: 95%;
+            }
+            input[type="text"], button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Form & Other Elements -->
+<div class="container">
+    <h2>Upload CSV to Train Model</h2>
+
+    <p id="message" class="success hidden">{{ message }}</p>
+    <p id="error" class="error hidden">{{ error }}</p>
+
+    <h3 id="accuracy-section" class="hidden">Model Accuracy: <span style="color: blue;">{{ accuracy }}</span></h3>
+
+    <form id="upload-form" action="{% url 'train_model' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="linkedin_csv" id="linkedin_csv" required>
+        <br>
+        <button type="submit">Train Model</button>
+    </form>
+
+    <div id="results-section" class="hidden">
+        <h3>Available Locations</h3>
+        <div id="locations-list">Loading...</div>
+
+        <h3>Predict Skills</h3>
+        <input type="text" id="location-input" placeholder="Enter Location">
+        <button onclick="predictSkills()">Predict</button>
+
+        <h3>Top 5 Predicted Skills</h3>
+        <ul id="predicted-skills"></ul>
+    </div>
+</div>
+
+<!-- Table Section -->
+<div class="table-container">
+    <h3>First 10 Rows of CSV</h3>
+    <table id="csv-preview">
+        <thead>
+            <tr id="csv-headers"></tr>
+        </thead>
+        <tbody id="csv-body"></tbody>
+    </table>
+</div>
+
+<a href="{% url 'businessman_dashboard' %}" class="back-button">⬅ Back To Dashboard</a>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initially hide sections
+        document.getElementById("accuracy-section").classList.add("hidden");
+        document.getElementById("results-section").classList.add("hidden");
+    });
+
+    document.getElementById("upload-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        let formData = new FormData(this);
+
+        fetch(this.action, {
+            method: this.method,
+            body: formData,
+        })
+        .then(response => response.text())
+        .then(() => {
+            alert("Model training complete!");
+
+            // Show model accuracy & results section
+            document.getElementById("accuracy-section").classList.remove("hidden");
+            document.getElementById("results-section").classList.remove("hidden");
+
+            // Fetch job options and preview CSV
+            setTimeout(fetchJobOptions, 2000);
+            previewCSV();
+        })
+        .catch(error => console.error("Error uploading file:", error));
+    });
+
+    function fetchJobOptions() {
+        let formData = new FormData();
+        let fileInput = document.getElementById('linkedin_csv');
+        if (fileInput.files.length > 0) {
+            formData.append('linkedin_csv', fileInput.files[0]);
+        }
+
+        fetch("{% url 'get_job_options' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.locations) {
+                document.getElementById("locations-list").innerHTML = data.locations.join("<br>");
+            } else {
+                document.getElementById("locations-list").innerHTML = "No locations found.";
+            }
+            if (data.error) {
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching locations:", error);
+            document.getElementById("locations-list").innerHTML = "Failed to load locations.";
+        });
+    }
+
+    function predictSkills() {
+        let location = document.getElementById("location-input").value.trim();
+        if (!location) {
+            alert("Please enter a location.");
+            return;
+        }
+
+        fetch("{% url 'predict_skills_view' %}", {
+            method: "POST",
+            body: new URLSearchParams({ "location": location }),
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.top_5_skills) {
+                let skillList = document.getElementById("predicted-skills");
+                skillList.innerHTML = "";
+                data.top_5_skills.forEach(skill => {
+                    let listItem = document.createElement("li");
+                    listItem.textContent = skill;
+                    skillList.appendChild(listItem);
+                });
+            } else {
+                document.getElementById("predicted-skills").innerHTML = "<li>No skills found.</li>";
+            }
+            if (data.error) {
+                alert(data.error);
+            }
+        })
+        .catch(error => console.error("Error predicting skills:", error));
+    }
+
+    function previewCSV() {
+        let fileInput = document.getElementById("linkedin_csv");
+        if (fileInput.files.length === 0) {
+            return;
+        }
+
+        let reader = new FileReader();
+        reader.onload = function(event) {
+            let csvData = event.target.result;
+            let rows = csvData.split("\n").slice(0, 11); // Get first 10 rows
+
+            let tableHead = document.getElementById("csv-headers");
+            let tableBody = document.getElementById("csv-body");
+
+            tableHead.innerHTML = "";
+            tableBody.innerHTML = "";
+
+            if (rows.length > 1) {
+                let headers = rows[0].split(",");
+                headers.forEach(header => {
+                    let th = document.createElement("th");
+                    th.textContent = header;
+                    tableHead.appendChild(th);
+                });
+
+                for (let i = 1; i < rows.length; i++) {
+                    let row = rows[i].split(",");
+                    if (row.length === headers.length) {
+                        let tr = document.createElement("tr");
+                        row.forEach(cell => {
+                            let td = document.createElement("td");
+                            td.textContent = cell;
+                            tr.appendChild(td);
+                        });
+                        tableBody.appendChild(tr);
+                    }
+                }
+            }
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        $(".menu-item").on("click", function (e) {
+            e.preventDefault();
+            $(".menu-item").removeClass("active");
+            $(this).addClass("active");
+            $("#main-content").html("<div class='loading'>Loading...</div>");
+            $.get($(this).data("url"), function (data) {
+                $("#main-content").html(data);
+            }).fail(function () {
+                $("#main-content").html("<div class='loading'>Failed to load content.</div>");
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

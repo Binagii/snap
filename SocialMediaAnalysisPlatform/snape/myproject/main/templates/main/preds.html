@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar styling */
+.sidebar {
+    width: 250px;
+    background-color: #2c3e50;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    height : 100vh;
+    position : fixed;
+    left : 0;
+    top : 0;
+}
+
+.sidebar h2 {
+    font-size: 22px;
+    margin-bottom: 30px;
+    color: #1abc9c;
+}
+
+.sidebar a {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px 15px;
+    margin-bottom: 50px ;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background-color: #1abc9c;
+}
+
+.sidebar .menu-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .menu-item:last-child {
+    margin-top: auto; /* Pushes the logout link to the bottom */
+}
+
+/* Main content styling */
+.main-content {
+    margin-left : 120px;
+    flex-grow: 1;
+    background-color: #f9f9f9;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.main-content .loading {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+}
+/* Header */
+h1 {
+    text-align: center;
+    color: #1abc9c;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* File Upload & Controls */
+#controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    max-width: 100%;
+}
+
+#controls label {
+    padding: 10px 15px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#controls label:hover {
+    background-color: #28a745;
+}
+
+/* File Input */
+input[type="file"] {
+    padding: 10px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    width: 250px;
+    font-size: 14px;
+    background: white;
+    margin: 10px auto;
+    display: block;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center; /* Centers the buttons horizontally */
+    gap: 10px; /* Adds spacing between buttons */
+    margin-top: 15px; /* Adds space from the above section */
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+/* Buttons */
+button {
+    background-color: #28a745;
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+    margin: 10px;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+/* Filters Section */
+#filters {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+#filters label {
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+#filters input {
+    margin-right: 8px;
+}
+
+/* Table Styling */
+#csvTable {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    margin-top: 10px;
+}
+
+/* Table inside container */
+#csvTable table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto; /* Makes columns flexible */
+}
+
+/* Table Header */
+#csvTable th {
+    background-color: #28a745;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+    white-space: nowrap; /* Prevents wrapping */
+}
+
+/* Table Cells */
+#csvTable td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    word-wrap: break-word;
+    white-space: normal; /* Allows text wrapping */
+    vertical-align: top;
+}
+
+/* Zebra Striped Table */
+#csvTable tr:nth-child(even) {
+    background-color: #f3f4f6;
+}
+
+/* Scrollable Table for Overflow */
+#csvTable {
+    overflow-x: auto;
+    display: block;
+}
+
+/* Checkbox Styling */
+.row-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #28a745;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1024px) {
+    .main-content {
+        margin-left: 250px; /* Adjust slightly for smaller screens */
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    #csvTable {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    #controls {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Dashboard</h2>
+        
+            <a href="#" class="menu-item" data-url="{% url 'view_profile_businessman' %}">My Profile</a>
+            <a href="#" class="menu-item" data-url="{% url 'upload_and_view_charts' %}">Upload File</a>
+            <a href="#" class="menu-item" data-url="{% url 'scrape_profile' %}">Scrape Profile</a>
+            <a href="#" class="menu-item active" data-url="{% url 'preds' %}">Edit rows and columns</a>
+            <a href="#" class="menu-item" data-url="/predict_engagement/">Prediction Model</a>
+            <a href="#" class="menu-item" data-url="{% url 'upload_csv' %}">Upload CSV to Neo4j</a>
+            <a href="#" class="menu-item" data-url="{% url 'view_businessman_accounts' %}">View User Accounts</a>
+            <a href="{% url 'testimonial_page' %}">Submit Testimonial</a>
+            <a href="{% url 'admin_logout' %}">Logout</a>
+    </div>
+
+
+
+    <div class="main-content" id="main-content">
+    <h1>Upload and View CSV</h1>
+    <input type="file" id="csvFileInput" accept=".csv" />
+    <div id="controls"></div>
+    <div class="button-container">
+    <button id="removeRowsButton">Remove Selected Rows</button>
+    <button id="saveCsvButton">Save CSV</button>
+    </div>
+    <div id="csvTable"></div>
+    <div id="filters">
+        <label>
+            <input type="checkbox" id="filterImages" />
+            <span></span> Images
+        </label>
+        <label>
+            <input type="checkbox" id="filterVideos" />
+            <span></span> Videos
+        </label>
+        <label>
+            <input type="checkbox" id="filterSponsored" />
+            <span></span> Sponsored
+        </label>
+        <label>
+            <input type="checkbox" id="filterNonSponsored" />
+            <span></span> Non-Sponsored
+        </label>
+    </div>
+</div>
+
+    <script>
+        let csvData = [];
+        let columnVisibility = {};
+
+        document.getElementById('csvFileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                Papa.parse(file, {
+                    complete: function(results) {
+                        processCSVData(results.data);
+                    },
+                    header: true,
+                    skipEmptyLines: true, // Ensure empty lines are skipped
+                    dynamicTyping: true // Automatically typecast data
+                });
+            }
+        });
+
+        function processCSVData(data) {
+            csvData = data.map((row, index) => {
+                const newRow = { 'Post number': index + 1, ...row };
+                if (newRow['timestamp']) {
+                    const date = new Date(newRow['timestamp']);
+                    newRow['Day'] = String(date.getDate()).padStart(2, '0');
+                    newRow['Day of Upload'] = date.toLocaleString('en-US', { weekday: 'long' });
+                    newRow['Month'] = String(date.getMonth() + 1).padStart(2, '0');
+                    newRow['Year'] = date.getFullYear();
+                    newRow['Hour'] = String(date.getHours()).padStart(2, '0');
+                }
+                return newRow;
+            });
+
+            // Restructure columns
+            csvData = csvData.map(row => {
+                return {
+                    'Post Number': row['Post number'],
+                    'Owner Username': row['owner_username'],
+                    'Verified': row['is_verified'],
+                    'Followers': row['followers'],
+                    'Shortcode': row['shortcode'],
+                    'Timestamp': row['timestamp'],
+                    'Day': row['Day'],
+                    'Month': row['Month'],
+                    'Year': row['Year'],
+                    'Day of Upload': row['Day of Upload'],
+                    'Hour': row['Hour'],
+                    'Likes': row['likes'],
+                    'Title': row['title'],
+                    'Caption': row['caption'],
+                    'Comments': row['comments'],
+                    'Hashtags': row['hashtags'],
+                    'Is Video': row['is_video'],
+                    'Video Url': row['video_url'],
+                    'Video Duration': row['video_duration'],
+                    'Image Url': row['image_url'],
+                    'Sponsored': row['is_sponsored']
+                };
+            });
+
+            // Initialize column visibility
+            if (Object.keys(columnVisibility).length === 0) {
+                columnVisibility = Object.keys(csvData[0]).reduce((acc, key) => {
+                    acc[key] = true;
+                    return acc;
+                }, {});
+            }
+
+            displayTable(csvData);
+            createCheckboxes(csvData);
+        }
+
+        function displayTable(data) {
+            const table = document.createElement('table');
+            table.border = 1;
+            const headerRow = document.createElement('tr');
+            const selectAllTh = document.createElement('th');
+            const selectAllCheckbox = document.createElement('input');
+            selectAllCheckbox.type = 'checkbox';
+            selectAllCheckbox.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            });
+            selectAllTh.appendChild(selectAllCheckbox);
+            headerRow.appendChild(selectAllTh);
+
+            Object.keys(data[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                th.dataset.column = key;
+                th.style.display = columnVisibility[key] ? '' : 'none';
+                headerRow.appendChild(th);
+            });
+            table.appendChild(headerRow);
+
+            data.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                const checkboxTd = document.createElement('td');
+                const rowCheckbox = document.createElement('input');
+                rowCheckbox.type = 'checkbox';
+                rowCheckbox.className = 'row-checkbox';
+                rowCheckbox.dataset.rowIndex = rowIndex;
+                checkboxTd.appendChild(rowCheckbox);
+                tr.appendChild(checkboxTd);
+
+                Object.keys(row).forEach((key, index) => {
+                    const td = document.createElement('td');
+                    td.textContent = row[key];
+                    td.dataset.column = key;
+                    td.style.display = columnVisibility[key] ? '' : 'none';
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+
+            const csvTable = document.getElementById('csvTable');
+            csvTable.innerHTML = '';
+            csvTable.appendChild(table);
+        }
+
+        function createCheckboxes(data) {
+            const controls = document.getElementById('controls');
+            controls.innerHTML = '';
+            Object.keys(data[0]).forEach(key => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = columnVisibility[key];
+                checkbox.dataset.column = key;
+                checkbox.addEventListener('change', function() {
+                    toggleColumn(key, checkbox.checked);
+                });
+                const span = document.createElement('span');
+                span.textContent = '✔';
+                label.appendChild(checkbox);
+                label.appendChild(span);
+                label.appendChild(document.createTextNode(key));
+                controls.appendChild(label);
+            });
+        }
+
+        function toggleColumn(column, show) {
+            columnVisibility[column] = show;
+            const cells = document.querySelectorAll(`[data-column="${column}"]`);
+            cells.forEach(cell => {
+                cell.style.display = show ? '' : 'none';
+            });
+        }
+
+        document.getElementById('removeRowsButton').addEventListener('click', function() {
+            const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+            const rowsToRemove = Array.from(checkboxes).map(checkbox => parseInt(checkbox.dataset.rowIndex));
+            rowsToRemove.sort((a, b) => b - a).forEach(rowIndex => {
+                csvData.splice(rowIndex, 1);
+            });
+            applyFilters();
+        });
+
+        document.getElementById('saveCsvButton').addEventListener('click', function() {
+            const visibleColumns = Object.keys(columnVisibility).filter(key => columnVisibility[key]);
+            const filteredData = applyFilters(); // Use the filtered data
+
+            const csvContent = Papa.unparse(filteredData.map(row => {
+                const newRow = {};
+                visibleColumns.forEach(key => {
+                    newRow[key] = row[key];
+                });
+                return newRow;
+            }));
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'filtered_data.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById('filterImages').addEventListener('change', function() {
+            applyFilters();
+        });
+
+        document.getElementById('filterVideos').addEventListener('change', function() {
+            applyFilters();
+        });
+
+        document.getElementById('filterSponsored').addEventListener('change', function() {
+            applyFilters();
+        });
+
+        document.getElementById('filterNonSponsored').addEventListener('change', function() {
+            applyFilters();
+        });
+
+        function applyFilters() {
+            let filteredData = csvData;
+
+            if (document.getElementById('filterImages').checked) {
+                filteredData = filteredData.filter(row => row['Is Video'] === 'False');
+            }
+
+            if (document.getElementById('filterVideos').checked) {
+                filteredData = filteredData.filter(row => row['Is Video'] === 'True');
+            }
+
+            if (document.getElementById('filterSponsored').checked) {
+                filteredData = filteredData.filter(row => row['Sponsored'] === 'True');
+            }
+
+            if (document.getElementById('filterNonSponsored').checked) {
+                filteredData = filteredData.filter(row => row['Sponsored'] === 'False');
+            }
+
+            displayTable(filteredData);
+            return filteredData; // Return the filtered data for saving
+        }
+
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $(".menu-item").on("click", function (e) {
+                e.preventDefault();
+                $(".menu-item").removeClass("active");
+                $(this).addClass("active");
+                $("#main-content").html("<div class='loading'>Loading...</div>");
+                $.get($(this).data("url"), function (data) {
+                    $("#main-content").html(data);
+                }).fail(function () {
+                    $("#main-content").html("<div class='loading'>Failed to load content.</div>");
+                });
+            });
+        });
+    </script>
+</body>
+</html>

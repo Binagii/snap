@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Testimonial</title>
+    <style>
+        /* General Page Styling */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Center the Testimonial Section */
+.review-section {
+    max-width: 1000px;
+    width: 100%;
+    background: #ffffff;
+    padding: 30px 60px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+/* Title Styling */
+.review-section h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Stars Styling */
+.stars {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.stars span {
+    font-size: 30px;
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.stars span:hover,
+.stars span.active {
+    color: #f39c12;
+    transform: scale(1.2);
+}
+
+/* Textarea Styling */
+textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    resize: none;
+    margin-bottom: 20px;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease-in-out;
+}
+
+textarea:focus {
+    border-color: #007bff;
+    background-color: #fff;
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+}
+
+/* Submit Button */
+button {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+button:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: scale(1.05);
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+    .review-section {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .stars span {
+        font-size: 26px;
+    }
+
+    button {
+        font-size: 14px;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+    
+
+    
+
+    
+    <!-- Testimonial Section (Automatically Visible) -->
+    <div class="review-section">
+        <h2>Submit Your Testimonial</h2>
+
+        
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="stars">
+                <input type="hidden" name="rating" id="rating">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <textarea name="content" rows="5" placeholder="Write your review here..."></textarea>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        const stars = document.querySelectorAll('.star');
+const ratingInput = document.getElementById('rating');
+
+stars.forEach((star, index) => {
+    star.addEventListener('click', () => {
+        stars.forEach(s => s.classList.remove('active'));
+        for (let i = 0; i <= index; i++) {
+            stars[i].classList.add('active');
+        }
+        ratingInput.value = index + 1;
+    });
+
+    star.addEventListener('mouseover', () => {
+        stars.forEach((s, i) => s.classList.toggle('active', i <= index));
+    });
+
+    star.addEventListener('mouseleave', () => {
+        stars.forEach((s, i) => s.classList.toggle('active', i < ratingInput.value));
+    });
+});
+
+    </script>
+
+</body>
+</html>

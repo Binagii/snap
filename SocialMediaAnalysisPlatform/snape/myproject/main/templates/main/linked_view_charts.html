@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LinkedIn Data Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script>
+        function updateCharts() {
+            var selectedLocation = document.getElementById("locationFilter").value;
+            window.location.href = "?location=" + selectedLocation;
+        }
+    </script>
+    <style>
+
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 20px;
+        background-color: #f4f4f4;
+        text-align: center;
+    }
+    h2 {
+        color: #333;
+    }
+    select {
+        padding: 10px;
+        font-size: 16px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    .plot-container {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        margin: 20px auto;
+        max-width: 1300px;
+    }
+    .back-button {
+        display: inline-block;
+        padding: 10px 15px;
+        margin-top: 20px;
+        font-size: 14px;
+        color: white;
+        background-color: #007bff;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+    .back-button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</head>
+<body>
+    <h2>LinkedIn Data Visualization</h2>
+    
+    <label for="locationFilter">Select Location:</label>
+    <select id="locationFilter" onchange="updateCharts()">
+        <option value="">All</option>
+        {% for location in locations %}
+            <option value="{{ location }}" {% if request.GET.location == location %}selected{% endif %}>{{ location }}</option>
+        {% endfor %}
+    </select>
+    
+    <div id="chartsContainer">
+        {% for plot in plots %}
+            <div class="plot-container">
+                {{ plot|safe }}
+            </div>
+        {% endfor %}
+    </div>
+    
+    <h3>Total Applicants by Job Location (Unfiltered)</h3>
+    <div class="plot-container">
+        {{ plot6|safe }}
+    </div>
+
+     <!-- Back Button -->
+     <a href="{% url 'businessman_dashboard' %}" class="back-button">⬅ Back To Dashboard</a>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Data Processing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            height : 100vh;
+            position : fixed;
+            left : 0;
+            top : 0;
+        }
+
+        .sidebar h2 {
+            font-size: 22px;
+            margin-bottom: 30px;
+            color: #1abc9c;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #fff;
+            padding: 10px 15px;
+            margin-bottom: 50px ;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background-color: #1abc9c;
+        }
+        
+
+        .sidebar .menu-items {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar .menu-item:last-child {
+            margin-top: auto; /* Pushes the logout link to the bottom */
+        }
+
+        
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .pagination {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pagination a {
+            text-decoration: none;
+            color: #636ae8;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+
+        .pagination span {
+            color: #333;
+            margin: 0 10px;
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 1000px;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        thead {
+            background-color: #636ae8;
+            color: #fff;
+        }
+
+        th, td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            word-wrap: break-word;
+        }
+
+        th {
+            font-size: 14px;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #636ae8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            
+            
+        }
+
+        button:hover {
+            background-color: #4b56e8;
+        }
+
+        @media (max-width: 768px) {
+            th, td {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Manual Data Processing</h1>
+
+    <div class="sidebar">
+        <h2>Dashboard</h2>
+        <a href="{% url 'view_profile_businessman' %}" class="menu-item">My Profile</a>
+        <a href="{% url 'upload_csv_or_xlsx' %}" class="menu-item">Upload File</a>
+        <a href="{% url 'download_csv' %}" class="menu-item">Download CSV</a>
+        <a href="{% url 'view_businessman_accounts' %}" class="menu-item">View User Accounts</a>
+        <a href="{% url 'create_businessman_account' %}" class="menu-item">Create Account</a>
+        <a href="{% url 'admin_logout' %}" class="menu-item">Logout</a>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="?page={{ current_page|add:-1 }}">Previous</a>
+        {% endif %}
+        <span>Page {{ current_page }} of {{ total_pages }}</span>
+        {% if current_page < total_pages %}
+            <a href="?page={{ current_page|add:1 }}">Next</a>
+        {% endif %}
+    </div>
+
+    <!-- Scrollable Table -->
+    <form method="post">
+        {% csrf_token %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        {% for header in headers %}
+                            <th>{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                        <tr>
+                            {% for key, value in row.items %}
+                                <td>
+                                    <input type="text" name="data_{{ forloop.parentloop.counter0 }}_{{ key }}" value="{{ value }}">
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="submit">Save Changes</button>
+    </form>
+
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Predict Likes and Comments</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
+        /* Centered Form Card */
+        .content-card {
+            width: 60%;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin: auto;
+        }
+
+        /* Form Styling */
+        label {
+            font-weight: bold;
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #1abc9c;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #16a085;
+        }
+
+        /* Prediction Results */
+        .results-container {
+            width: 60%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            text-align: center;
+            display: none;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1abc9c;
+        }
+        .metrics-container {
+            width: 60%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            text-align: center;
+        }
+    
+        .metrics-header {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+    
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+    
+        .metric-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    
+        .metric-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #34495e;
+        }
+    
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1abc9c;
+            margin-top: 5px;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        td {
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    
+    <!-- Form -->
+    <div class="content-card">
+        <h1>Predict Likes and Comments</h1>
+        <form id="prediction-form" method="post" enctype="multipart/form-data">
+            
+            <label for="csv_file">Upload CSV File:</label>
+            <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+
+            <label for="hour">Hour (00-23):</label>
+            <input type="number" id="hour" name="hour" min="0" max="23" required>
+
+            <label for="post_type">Post Type:</label>
+            <select id="post_type" name="post_type" required>
+                <option value="Image with Hashtags">Image with Hashtags</option>
+                <option value="Video with Hashtags">Video with Hashtags</option>
+                <option value="Image without Hashtags">Image without Hashtags</option>
+                <option value="Video without Hashtags">Video without Hashtags</option>
+            </select>
+
+            <button type="submit">Predict</button>
+        </form>
+    </div>
+
+    <!-- Prediction Results -->
+    <div class="results-container" id="results-container">
+        <h2>Predicted Results</h2>
+        <p>Predicted Likes: <span class="result-value" id="predicted-likes"></span></p>
+        <p>Predicted Comments: <span class="result-value" id="predicted-comments"></span></p>
+
+        <h2>Last 10 Posts</h2>
+        <div id="last-10-posts"></div>
+
+        <div class="metrics-container">
+            <div class="metrics-header">📊 Model Performance Metrics</div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Likes R² Score</div>
+                    <div class="metric-value" id="likes-r2">0.9054</div>
+                </div>
+        
+                <div class="metric-card">
+                    <div class="metric-title">Comments R² Score</div>
+                    <div class="metric-value" id="comments-r2">0.7995</div>
+                </div>
+        
+                <div class="metric-card">
+                    <div class="metric-title">Likes MAE</div>
+                    <div class="metric-value" id="likes-mae">0.5218</div>
+                </div>
+        
+                <div class="metric-card">
+                    <div class="metric-title">Comments MAE</div>
+                    <div class="metric-value" id="comments-mae">0.7787</div>
+                </div>
+        
+                <div class="metric-card">
+                    <div class="metric-title">Likes MSE</div>
+                    <div class="metric-value" id="likes-mse">0.5835</div>
+                </div>
+        
+                <div class="metric-card">
+                    <div class="metric-title">Comments MSE</div>
+                    <div class="metric-value" id="comments-mse">0.9294</div>
+                </div>
+            </div>
+        </div>
+
+        <h2>Sample of Actual vs Predicted Values</h2>
+        <div id="results-df"></div>
+
+        <h2>Top 5 Most Important Features</h2>
+        <div id="feature-importance"></div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        $('#prediction-form').on('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: "{% url 'predict_engagement' %}",
+                type: "POST",
+                method: "POST",  
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        $("#predicted-likes").text(response.likes_pred);
+                        $("#predicted-comments").text(response.comments_pred);
+            
+                        $("#df-preview").html(response.df_preview);
+                        $("#likes-r2").text(response.likes_r2.toFixed(4));
+                        $("#comments-r2").text(response.comments_r2.toFixed(4));
+                        $("#likes-mae").text(response.likes_mae.toFixed(4));
+                        $("#comments-mae").text(response.comments_mae.toFixed(4));
+                        $("#likes-mse").text(response.likes_mse.toFixed(4));
+                        $("#comments-mse").text(response.comments_mse.toFixed(4));
+            
+                        $("#results-df").html(response.results_df);
+                        $("#feature-importance").html(response.feature_importance);
+                        $("#last-10-posts").html(response.last_10_posts);
+            
+                        $("#results-container").show();
+                    }
+                },
+                error: function () {
+                    alert("Error processing the file. Please check the format.");
+                }
+            });
+        });
+    });
+    </script>
+
+</body>
+</html>
